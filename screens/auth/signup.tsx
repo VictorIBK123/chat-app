@@ -1,18 +1,86 @@
 import { StackScreenProps } from '@react-navigation/stack';
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, Keyboard } from 'react-native';
 // To use icons, you'll need to install react-native-vector-icons:
 // npm install react-native-vector-icons
 // For iOS, after installation: npx react-native link react-native-vector-icons and then cd ios && pod install && cd ..
 // For Android, you'll need to follow the specific linking instructions from their documentation.
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { RootStackParamList } from '../../types/navigation';
+import { StatusBar } from 'react-native';
+import UseSignup from '../../custom_hooks/network_requests/usesignup';
+import Toast from 'react-native-toast-message';
 
 const { width } = Dimensions.get('window');
 type SignupScreenProps = StackScreenProps<RootStackParamList, 'SignupScreen'>
 const SignupScreen: React.FC<SignupScreenProps> = ({navigation}) => {
+
+  const [password, setPassword] = React.useState<string>('');
+  const [confirmPassword, setConfirmPassword] = React.useState<string>('');
+  const [email, setEmail] = React.useState<string>('');
+  const [registering, setRegistering] = React.useState<boolean>(false);
+
+  const onTextChange = (text: string, field: 'email' | 'password' | 'confirmPassword') => {
+    if (field === 'email') {
+      setEmail(text);
+    } else if (field === 'password') {
+      setPassword(text);
+    } else {
+      setConfirmPassword(text);
+    }
+  }
+
+  const signUpHandler = async () => {
+    Keyboard.dismiss();
+    if (email && password && confirmPassword){
+      setRegistering(true);
+      const responseData = await UseSignup(email, password);
+      setRegistering(false)
+      if (responseData.message == 'Email already registered'){
+        Toast.show({
+          type: 'error',
+          text1: 'Email already registered',
+          position: 'top',
+          visibilityTime: 3000,
+          autoHide: true,
+        });
+      }
+      else if (responseData.success){
+        Toast.show({
+          type: 'success',
+          text1: 'Verification code sent to your email',
+          position: 'top',
+          visibilityTime: 3000,
+          autoHide: true,
+          onHide: () => navigation.navigate('VerifyEmailScreen', {email})
+        });
+        // navigation.navigate('EmailVerificationScreen', {email})
+      }
+      else {
+        Toast.show({
+          type: 'error',
+          text1: responseData,
+          position: 'top',
+          visibilityTime: 3000,
+          autoHide: true,
+        });
+      }
+    }
+    else {
+      Toast.show({
+        type: 'error',
+        text1: 'Please fill all fields',
+        position: 'top',
+        visibilityTime: 3000,
+        autoHide: true,
+      });
+    }
+    
+  }
+
   return (
     <View style={styles.container}>
+      <StatusBar barStyle={'light-content'} />
       <View style={styles.card}>
         <Text style={styles.title}>
           Create Account! 
@@ -28,6 +96,8 @@ const SignupScreen: React.FC<SignupScreenProps> = ({navigation}) => {
               {/* Mail icon */}
               <Icon name="envelope" size={20} color="#9ca3af" style={styles.icon} />
               <TextInput
+                onChangeText={(text) => onTextChange(text, 'email')}
+                value={email}
                 style={styles.input}
                 placeholder="yourname@example.com"
                 placeholderTextColor="#9ca3af"
@@ -46,6 +116,8 @@ const SignupScreen: React.FC<SignupScreenProps> = ({navigation}) => {
               {/* Lock icon */}
               <Icon name="lock" size={20} color="#9ca3af" style={styles.icon} />
               <TextInput
+                onChangeText={(text) => onTextChange(text, 'password')}
+                value={password}
                 style={styles.input}
                 placeholder="••••••••"
                 placeholderTextColor="#9ca3af"
@@ -63,6 +135,8 @@ const SignupScreen: React.FC<SignupScreenProps> = ({navigation}) => {
               {/* Lock icon for confirm password */}
               <Icon name="lock" size={20} color="#9ca3af" style={styles.icon} />
               <TextInput
+                onChangeText={(text) => onTextChange(text, 'confirmPassword')}
+                value={confirmPassword}
                 style={styles.input}
                 placeholder="••••••••"
                 placeholderTextColor="#9ca3af"
@@ -72,10 +146,11 @@ const SignupScreen: React.FC<SignupScreenProps> = ({navigation}) => {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.signUpButton}>
-            <Text style={styles.signUpButtonText}>
+          <TouchableOpacity onPress={signUpHandler} style={styles.signUpButton}>
+            <Text style={[styles.signUpButtonText,{ opacity: registering ? 0.5 : 1 }]}>
               Sign Up
             </Text>
+            <ActivityIndicator style={{position:'absolute'}} animating={registering? true:false} color='#1a202c' size='large' />
           </TouchableOpacity>
         </View>
 
@@ -104,6 +179,7 @@ const SignupScreen: React.FC<SignupScreenProps> = ({navigation}) => {
           </Text>
         </Text>
       </View>
+      <Toast  />
     </View>
   );
 };

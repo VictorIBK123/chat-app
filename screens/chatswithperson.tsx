@@ -6,6 +6,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Zocial from 'react-native-vector-icons/Zocial';
 import Foundation from 'react-native-vector-icons/Foundation';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
 
@@ -44,8 +45,10 @@ const ChatWithPerson = () => {
     }
   },[])
 
-  const sendMessage = () => {
+  useEffect(()=>{
     flatListRef.current?.scrollToEnd({ animated: true });
+  },[messages])
+  const sendMessage = () => {
     if (newMessage.trim()) {
       const newMsg = {
         id: String(messages.length + 1),
@@ -69,13 +72,14 @@ const ChatWithPerson = () => {
   );
 
   return (
+    <SafeAreaView style={{flex:1, backgroundColor:'#2d3748'}}>
     <KeyboardAvoidingView
       style={styles.container}
       enabled={enabled}
       behavior={Platform.OS === 'ios' ? 'padding' :'height'}
       // keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0} // Adjust as needed
     >
-      <StatusBar barStyle="light-content" backgroundColor="#1a202c" />
+      <StatusBar barStyle="light-content" backgroundColor='#2d3748' />
       {/* Header Section */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton}>
@@ -130,6 +134,7 @@ const ChatWithPerson = () => {
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
@@ -142,7 +147,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 50, // Adjust for status bar
+    // paddingTop: 50, // Adjust for status bar
     paddingBottom: 12,
     backgroundColor: '#2d3748', // bg-gray-800
     borderBottomWidth: 1,
@@ -217,7 +222,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 8,
-    paddingBottom: 20,
+    // paddingBottom: 20,
     backgroundColor: '#2d3748', // bg-gray-800
     borderTopWidth: 1,
     borderTopColor: '#4a5568', // border-gray-700
